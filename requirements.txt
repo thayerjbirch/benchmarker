@@ -1,2 +1,6 @@
-matplotlib
-pysimplegui
+dash
+cachetools
+pathtools
+s2reader
+mpyq
+plotly
