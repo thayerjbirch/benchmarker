@@ -125,6 +125,9 @@ class Sc2Replay:
         for event in unit_events:
             EVENT_HANDLERS.get(event['_event'], handle_other)(self, event)
 
+        for player in self.players:
+            self.players[player].finalize_timeline()
+
     def parse_tracker_events(self, replay_details, tracker_events):
         last_registered_game_loop = tracker_events[-1]['_gameloop']
         self.game_loops = last_registered_game_loop + 1

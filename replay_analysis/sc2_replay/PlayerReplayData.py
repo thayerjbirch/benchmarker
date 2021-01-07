@@ -15,17 +15,35 @@ class Snapshot:
     def __init__(self, parent, last_snapshot, game_loop):
         self.parent = parent
         self.last_snapshot = last_snapshot
-        self.mineral_income = 0
-        self.vespene_income = 0
+        self.mineral_income = None
+        self.vespene_income = None
         self.supply = None
-        self.resources_lost = 0
-        self.army_value = 0
-        self.tech_value = 0
-        self.economy_value = 0
+        self.resources_lost = None
+        self.army_value = None
+        self.tech_value = None
+        self.economy_value = None
         self.units = None
         self.in_production = None
         self.structures = None
         self.game_loop = game_loop
+
+    # Most stats aren't updated on every gameloop, but we want to build a full timeseries.
+    def copy_from_predecessor(self):
+        if self.last_snapshot is not None:
+            my_vars = vars(self)
+            for key in my_vars:
+                if my_vars[key] is None:
+                    my_vars[key] = vars(self.last_snapshot)[key]
+
+    def get_income(self, income_type='BOTH'):
+        if income_type == 'BOTH':
+            return self.mineral_income + self.vespene_income
+        elif income_type == 'MINERAL':
+            return self.mineral_income
+        elif income_type == 'VESPENE':
+            return self.vespene_income
+        else:
+            return ValueError(income_type + " is not a valid income type.")
 
     def get_units(self):
         # If we don't have current state for this snapshot, go backwards in time
@@ -104,13 +122,25 @@ class Snapshot:
         self.supply = stats.get('m_scoreValueFoodUsed', 0) / 4096
         for stat, value in stats.items():
             if 'Lost' in stat:
-                self.resources_lost += value
+                if self.resources_lost:
+                    self.resources_lost += value
+                else:
+                    self.resources_lost = value
             elif 'UsedCurrentArmy' in stat:
-                self.army_value += value
+                if self.army_value:
+                    self.army_value += value
+                else:
+                    self.army_value = value
             elif 'UsedCurrentEconomy' in stat:
-                self.economy_value += value
+                if self.economy_value:
+                    self.economy_value += value
+                else:
+                    self.economy_value = value
             elif 'UsedCurrentTech' in stat:
-                self.tech_value += value
+                if self.tech_value:
+                    self.tech_value += value
+                else:
+                    self.tech_value = value
 
     def start_production(self, entity_name):
         in_production = self.get_in_production()
@@ -200,7 +230,23 @@ class PlayerReplayData:
         unit = unit_param
         if unit == 'worker':
             unit = {'Protoss': 'Probe', 'Terran': 'SCV', 'Zerg': 'Drone'}[self.race]
-        return [snapshot.get_units().get(unit, 0) for snapshot in self.timeseries][10:]
+        return [snapshot.get_units().get(unit, 0) for snapshot in self.timeseries]
+
+    def finalize_timeline(self):
+        # Trim the initialization frames
+        for snapshot in self.timeseries[:11]:
+            snapshot.copy_from_predecessor()
+        self.timeseries = self.timeseries[10:]
+
+        for snapshot in self.timeseries:
+            snapshot.copy_from_predecessor()
 
     def get_supply_timeline(self):
-        return [snapshot.get_supply() for snapshot in self.timeseries][10:]
+        return [snapshot.get_supply() for snapshot in self.timeseries]
+
+    def get_income_timeline(self, income_type='BOTH'):
+        return [snapshot.get_income(income_type) for snapshot in self.timeseries]
+
+    # Just for convenience for timeseries that don't require any special handling.
+    def get_generic_timeline(self, snapshot_property):
+        return [vars(snapshot)[snapshot_property] for snapshot in self.timeseries]

@@ -79,7 +79,6 @@ UNITS = {
             "Archon",
             "Carrier",
             "Mothership",
-            "MothershipCore",
             "Oracle",
             "Tempest",
             "Adept",

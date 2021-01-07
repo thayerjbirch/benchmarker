@@ -4,3 +4,6 @@ pathtools
 s2reader
 mpyq
 plotly
+
+PyYAML
+s2protocol

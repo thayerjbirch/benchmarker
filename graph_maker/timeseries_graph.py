@@ -10,6 +10,8 @@ tableau20 = ['rgb(%s,%s,%s)' % (r, g, b) for r, g, b in
 random.shuffle(tableau20)
 TICKS_PER_SECOND = 22.4
 
+print("Chose colors {} and {}".format(tableau20[0], tableau20[1]))
+
 
 def create_plotly_timeseries_graph(data: [(str, [])], title: str = ""):
     # We calculate the length of the longer replay to determine how big the graph
@@ -43,7 +45,8 @@ def create_plotly_timeseries_graph(data: [(str, [])], title: str = ""):
                                              name=player[1],
                                              line={"color": tableau20[player[0]]},
                                              mode="lines"))
-    fig.update_layout(hovermode="x unified",
+    fig.update_layout(title=title,
+                      hovermode="x unified",
                       xaxis=dict(
                           tickmode='array',
                           tickvals=ticks
