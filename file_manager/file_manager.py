@@ -31,9 +31,12 @@ class FileManager:
 
     def get_replays_navs(self, size=10):
         navs = []
-        files = self.replay_dir.glob("*")
-        for file in sorted(files, key=lambda f: f.stat().st_ctime, reverse=True)[:size]:
-            navs.append(ReplayAnalysisNav(file.name, file, html.escape(file.name)))
+        for file in sorted(self.analyzed_replay_dir.glob("*.analysis"), key=lambda f: f.stat().st_ctime, reverse=True)[
+                    :size]:
+            navs.append(ReplayAnalysisNav(file.stem, file, html.escape(file.stem)))
+        # files = self.replay_dir.glob("*")
+        # for file in sorted(files, key=lambda f: f.stat().st_ctime, reverse=True)[:size]:
+        #     navs.append(ReplayAnalysisNav(file.name, file, html.escape(file.name)))
         return navs
 
     def get_analyzed_replays(self):
@@ -70,7 +73,7 @@ class FileManager:
     def load_analysis_from_url(self, url):
         analysis_name = html.unescape(url[1:].replace("%20", " ")).replace('.SC2Replay', '') + '.analysis'
         file_name = self.analyzed_replay_dir / analysis_name
-        print(file_name)
+        print("loading analysis for file: ", file_name)
         try:
             with open(file_name, 'rb') as file:
                 analysis = pickle.load(file)

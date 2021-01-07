@@ -20,6 +20,12 @@ UNIT_DISPLAY_PAIRS_BY_RACE = {
 UNIT_DISPLAY_PAIRS_BY_RACE["Protoss"] = [UnitDisplayPair("Probe", "Worker")] + UNIT_DISPLAY_PAIRS_BY_RACE["Protoss"]
 UNIT_DISPLAY_PAIRS_BY_RACE["Terran"] = [UnitDisplayPair("SCV", "Worker")] + UNIT_DISPLAY_PAIRS_BY_RACE["Terran"]
 UNIT_DISPLAY_PAIRS_BY_RACE["Zerg"] = [UnitDisplayPair("Drone", "Worker")] + UNIT_DISPLAY_PAIRS_BY_RACE["Zerg"]
+STRUCTURE_DISPLAY_PAIRS_BY_RACE = {
+    race: [UnitDisplayPair(unit, re.sub(r"(\w)([A-Z])", r"\1 \2", unit)) for
+           unit in
+           UNITS[race]['structures']] for race
+    in
+    UNITS.keys()}
 
 
 def build_header(replay_name, players, canonical_replay_name, canonical_players):
@@ -120,10 +126,27 @@ def build_units_tab(player_key, player_data, canonical_data):
                                                                 'Zerg': 'Drone'}[player_data.race])] + graphs)
 
 
+def build_structures_tab(player_key, player_data, canonical_data):
+    unit_pairs = STRUCTURE_DISPLAY_PAIRS_BY_RACE[player_data.race]
+    dropdown_options = []
+    graphs = []
+    for unit_pair in unit_pairs:
+        dropdown_options.append({'label': unit_pair.unit_display_name, 'value': unit_pair.unit_tag})
+        graphs.append(dcc.Graph(
+            figure=timeseries_graph.create_plotly_timeseries_graph(
+                [(player_key, player_data.get_structure_timeline(unit_pair.unit_tag)),
+                 ("Target", canonical_data.get_structure_timeline(unit_pair.unit_tag))], title=unit_pair.unit_display_name),
+            id=unit_pair.unit_tag))
+    return dcc.Tab(label="Structures", children=[dcc.Dropdown(id='{}-structures-dropdown'.format(player_data.race),
+                                                         options=dropdown_options,
+                                                         value=unit_pairs[0].unit_display_name)] + graphs)
+
+
 def build_tabbed_layout(player_key, player_data, canonical_data):
     return dcc.Tabs([
         build_general_tab(player_key, player_data, canonical_data),
         build_units_tab(player_key, player_data, canonical_data),
+        build_structures_tab(player_key, player_data, canonical_data),
     ])
 
 

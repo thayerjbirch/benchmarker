@@ -151,7 +151,7 @@ class Snapshot:
         if unit.type in in_production:
             in_production[unit.type] -= 1
         else:
-            print(unit.type)
+            print(unit.type, " supposedly finished but isn't in production")
         if in_production[unit.type] == 0:
             del (in_production[unit.type])
         self.unit_born(unit)
@@ -160,6 +160,10 @@ class Snapshot:
         if unit.type in self.parent.available_units:
             units = self.get_units()
             units[unit.type] = units.get(unit.type, 0) + 1
+            self.parent.unit_id_to_type[unit.unit_id] = unit.type
+        elif unit.type in self.parent.available_structures:
+            structures = self.get_structures()
+            structures[unit.type] = structures.get(unit.type, 0) + 1
             self.parent.unit_id_to_type[unit.unit_id] = unit.type
 
     def unit_died(self, unit):
@@ -231,6 +235,9 @@ class PlayerReplayData:
         if unit == 'worker':
             unit = {'Protoss': 'Probe', 'Terran': 'SCV', 'Zerg': 'Drone'}[self.race]
         return [snapshot.get_units().get(unit, 0) for snapshot in self.timeseries]
+
+    def get_structure_timeline(self, structure):
+        return [snapshot.get_structures().get(structure, 0) for snapshot in self.timeseries]
 
     def finalize_timeline(self):
         # Trim the initialization frames

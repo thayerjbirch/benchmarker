@@ -9,7 +9,9 @@ def analyze_files_in_background(file_manager, replay_analyzer):
     analyzed_replays = list(file_manager.get_analyzed_replays())
     analyzed_replay_set = set([replay.stem for replay in analyzed_replays])
 
-    for replay in file_manager.get_replays_reverse_chronological(size=10):
+    # Doing these in reverse-reverse chronological order, because when displayed they are displayed with the newest on
+    # top (this will cause us to process the newest replay last, which means it will be the newest analysis).
+    for replay in file_manager.get_replays_reverse_chronological(size=10)[::-1]:
         if replay.stem not in analyzed_replays:
             analysis = replay_analyzer.get_analysis_for_file(replay)
             file_manager.persist_analysis(replay.stem, analysis)

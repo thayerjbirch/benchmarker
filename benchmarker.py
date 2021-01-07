@@ -12,7 +12,7 @@ from replay_analysis.sc2_replay.units import UNITS
 from yaml import load as load_yaml, FullLoader
 from cachetools import cached, TTLCache
 
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 app.title = "Benchmarker"
 file_manager = None
 replay_analyzer = None
@@ -102,6 +102,17 @@ def protoss_unit_dropdown_callback(dropdown_value):
     return tuple(return_dict.values())
 
 
+@app.callback([Output(component_id=unit, component_property='style') for unit in PROTOSS_STRUCTURES],
+              [Input(component_id='Protoss-structures-dropdown', component_property='value')])
+def protoss_structure_dropdown_callback(dropdown_value):
+    return_dict = {element: {'display': 'none'} for element in PROTOSS_STRUCTURES}
+    if dropdown_value in return_dict.keys():
+        return_dict[dropdown_value] = {'display': 'block'}
+    else:
+        raise PreventUpdate
+    return tuple(return_dict.values())
+
+
 @app.callback([Output(component_id=unit, component_property='style') for unit in TERRAN_UNITS],
               [Input(component_id='Terran-units-dropdown', component_property='value')])
 def terran_unit_dropdown_callback(dropdown_value):
@@ -113,10 +124,32 @@ def terran_unit_dropdown_callback(dropdown_value):
     return tuple(return_dict.values())
 
 
+@app.callback([Output(component_id=unit, component_property='style') for unit in TERRAN_STRUCTURES],
+              [Input(component_id='Terran-structures-dropdown', component_property='value')])
+def terran_structure_dropdown_callback(dropdown_value):
+    return_dict = {element: {'display': 'none'} for element in TERRAN_STRUCTURES}
+    if dropdown_value in return_dict.keys():
+        return_dict[dropdown_value] = {'display': 'block'}
+    else:
+        raise PreventUpdate
+    return tuple(return_dict.values())
+
+
 @app.callback([Output(component_id=unit, component_property='style') for unit in ZERG_UNITS],
               [Input(component_id='Zerg-units-dropdown', component_property='value')])
 def zerg_unit_dropdown_callback(dropdown_value):
     return_dict = {element: {'display': 'none'} for element in ZERG_UNITS}
+    if dropdown_value in return_dict.keys():
+        return_dict[dropdown_value] = {'display': 'block'}
+    else:
+        raise PreventUpdate
+    return tuple(return_dict.values())
+
+
+@app.callback([Output(component_id=unit, component_property='style') for unit in ZERG_STRUCTURES],
+              [Input(component_id='Zerg-structures-dropdown', component_property='value')])
+def zerg_structure_dropdown_callback(dropdown_value):
+    return_dict = {element: {'display': 'none'} for element in ZERG_STRUCTURES}
     if dropdown_value in return_dict.keys():
         return_dict[dropdown_value] = {'display': 'block'}
     else:
@@ -169,4 +202,4 @@ if __name__ == "__main__":
     background_encoder = threading.Thread(target=create_encodings_in_background, args=(file_manager,))
     background_encoder.start()
 
-    app.run_server(port=8888)
+    app.run_server(port=8888, debug=True)
